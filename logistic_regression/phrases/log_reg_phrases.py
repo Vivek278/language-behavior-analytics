@@ -10,14 +10,14 @@ from sklearn.metrics import accuracy_score, classification_report
 
 def lr_phrases(df, tokenized_texts):
     
-    x = [" ".join(sent) for sent in tokenized_texts]
+    x = [" ".join(t) for t in tokenized_texts]
     y = df["sentiment"]
     
     x_train, x_test, y_train, y_test = train_test_split(
         x, y, test_size = 0.2, random_state = 42
     )
     
-    vectorizer = CountVectorizer(min_df=3)
+    vectorizer = CountVectorizer(min_df = 3)
     x_train_vec = vectorizer.fit_transform(x_train)
     x_test_vec = vectorizer.transform(x_test)
     
@@ -33,7 +33,9 @@ def lr_phrases(df, tokenized_texts):
 
 def replace_phrases_in_texts(texts, phrases):
 
+    phrase_key = "phrase_key"
     trie = {}
+
     for ph in phrases:
         seq = ph.replace("_", " ").split()
         node = trie
@@ -41,7 +43,7 @@ def replace_phrases_in_texts(texts, phrases):
             if tok not in node:
                 node[tok] = {}
             node = node[tok]
-        node["_P"] = ph
+        node[phrase_key] = ph
 
     out_texts = []
     for t in texts:
@@ -52,21 +54,21 @@ def replace_phrases_in_texts(texts, phrases):
             node = trie
             j = i
             longest = None
-            longest_j = None
+            end_index = None
             while j < len(tokens) and tokens[j] in node:
                 node = node[tokens[j]]
                 j += 1
-                if "_P" in node:
-                    longest = node["_P"]
-                    longest_j = j
+                if phrase_key in node:
+                    longest = node[phrase_key]
+                    end_index = j
             if longest is not None:
                 new_tokens.append(longest)
-                i = longest_j
+                i = end_index
             else:
                 new_tokens.append(tokens[i])
                 i += 1
         out_texts.append(" ".join(new_tokens))
-        
+
     return out_texts
 
 
